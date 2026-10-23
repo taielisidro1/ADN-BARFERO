@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADN Barfero — Panel de Gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js';"></script>
+<style>
+  :root{
+    --ink:#241D20; --cream:#FCF3F7; --pink:#FF8FC4; --pink-dark:#D9509B;
+    --pink-soft:#F4DCE8; --sand:#F7E4EF; --line:#F0D6E5; --slate:#8A7686;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--cream); color:var(--ink); font-family:"Nunito",system-ui,sans-serif; }
+  h1,h2,h3{ font-family:"Quicksand",sans-serif; color:var(--pink-dark); margin:0; }
+  .topbar{
+    background:var(--pink); color:#fff; padding:18px 26px; display:flex;
+    justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;
+    border-radius:0 0 22px 22px;
+  }
+  .topbar-left{ display:flex; align-items:center; gap:12px; }
+  .logo-img{ height:46px; width:46px; border-radius:12px; object-fit:cover; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+  .topbar h1{ color:#fff; font-size:21px; }
+  .topbar .tag{ font-size:12px; color:#FBE9D8; }
+  nav{ display:flex; gap:6px; padding:16px 16px 0; overflow-x:auto; max-width:980px; margin:0 auto;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  nav::-webkit-scrollbar{ display:none; }
+  nav button{
+    background:#fff; border:1px solid var(--line); color:var(--slate); padding:10px 18px;
+    font-size:13.5px; cursor:pointer; font-family:"Quicksand",sans-serif; font-weight:600;
+    border-radius:999px; white-space:nowrap;
+  }
+  nav button.active{ background:var(--pink); color:#fff; border-color:var(--pink); }
+  nav button:hover:not(.active){ background:var(--sand); }
+  main{ max-width:980px; margin:0 auto; padding:22px 20px 60px; }
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:22px; padding:22px 24px;
+    margin-bottom:18px; box-shadow:0 2px 10px rgba(166,95,53,0.06);
+  }
+  .kpi-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:18px; }
+  .kpi-card{ text-align:center; }
+  .kpi-label{ font-size:13px; color:var(--slate); display:flex; justify-content:center; align-items:center; gap:6px; font-weight:600; }
+  .kpi-value{ font-family:"Quicksand",sans-serif; font-size:32px; font-weight:700; color:var(--pink-dark); margin-top:6px; }
+  .kpi-value.small{ font-size:20px; }
+  .eye-btn{ background:none; border:none; cursor:pointer; font-size:16px; color:var(--slate); padding:0; }
+  .note{ font-size:12.5px; color:var(--slate); margin:0 0 12px; }
+  label{ font-size:13px; font-weight:700; color:var(--pink-dark); display:block; margin-bottom:5px; font-family:"Quicksand",sans-serif; }
+  input, select{
+    font-family:"Nunito",sans-serif; font-size:16px; padding:12px 14px; border-radius:14px;
+    border:1.5px solid var(--line); background:#FFFDF9; color:var(--ink); width:100%;
+    min-height:46px;
+  }
+  input:focus, select:focus, button:focus{ outline:2px solid var(--pink-dark); outline-offset:1px; }
+  .form-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:14px; }
+  .btn{
+    background:var(--pink-dark); color:#fff; border:none; border-radius:999px; padding:12px 26px;
+    font-size:14.5px; font-weight:700; cursor:pointer; font-family:"Quicksand",sans-serif;
+  }
+  .btn:hover{ background:#4B6D47; }
+  .cliente-info{
+    background:var(--sand); border:1px solid var(--line); border-radius:14px; padding:10px 16px;
+    font-size:13.5px; margin-bottom:14px; display:none;
+  }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{ text-align:left; color:var(--slate); font-size:11.5px; padding:8px 10px; font-weight:700; border-bottom:2px solid var(--sand); }
+  tbody td{ padding:9px 10px; border-bottom:1px solid var(--line); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .caja-chip{ font-size:11px; padding:3px 10px; border-radius:999px; font-weight:700; }
+  .caja-chica{ background:#F1E2C8; color:var(--pink-dark); }
+  .caja-grande{ background:var(--pink); color:#fff; }
+  .caja-ninguna{ color:var(--slate); }
+  .empty{ color:var(--slate); font-size:13.5px; padding:24px 0; text-align:center; }
+  .soon{ text-align:center; padding:60px 20px; color:var(--slate); }
+  .soon h2{ margin-bottom:8px; }
+  .soon .paw-big{ font-size:38px; margin-bottom:10px; }
+  .badge{ display:inline-block; background:var(--pink); color:#fff; font-size:10.5px; padding:2px 8px; border-radius:20px; margin-left:6px; vertical-align:middle; }
+  .chart-header{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:6px; }
+  .chart-header select{ width:auto; padding:7px 12px; }
+
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table{ min-width:520px; }
+
+  .fila-venta{ cursor:pointer; }
+  .fila-venta:hover{ background:var(--sand); }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(36,29,32,0.45); z-index:50;
+    align-items:center; justify-content:center; padding:16px;
+  }
+  .modal-box{
+    background:#fff; border-radius:22px; padding:22px 24px; max-width:460px; width:100%;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+  .btn-text{
+    background:none; border:none; color:var(--slate); font-family:"Quicksand",sans-serif;
+    font-weight:700; font-size:14px; cursor:pointer; padding:10px 6px;
+  }
+  .btn-danger{ color:#C94F4F; }
+  .btn-danger:hover{ text-decoration:underline; }
+  .sync-badge{
+    background:rgba(36,29,32,0.28); color:#fff; border:none; border-radius:999px; padding:8px 14px;
+    font-size:12.5px; font-weight:700; font-family:"Quicksand",sans-serif; cursor:pointer; white-space:nowrap;
+  }
+
+  .month-nav{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:14px; }
+  .nav-arrow{
+    background:#fff; border:1.5px solid var(--line); color:var(--pink-dark); border-radius:999px;
+    width:36px; height:36px; font-size:14px; cursor:pointer;
+  }
+  .nav-arrow:hover{ background:var(--sand); }
+
+  @media (max-width: 600px){
+    .topbar{ padding:14px 16px; border-radius:0 0 18px 18px; }
+    .topbar h1{ font-size:18px; }
+    .logo-img{ height:38px; width:38px; }
+    main{ padding:16px 12px 50px; }
+    .card{ padding:16px 16px; border-radius:18px; }
+    .kpi-value{ font-size:26px; }
+    nav button{ padding:9px 14px; font-size:13px; }
+    .btn{ width:100%; padding:13px 20px; }
+    .form-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <img src="data:image/png;base64,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A3o5YtMWBqGFDel5ycnJJCcnt3i/4447jri4OKqrq6mrq+P+++9n7ty5jBgxgmHDhumJhmYzLpeLkpISNmzYwMqVK9m8eTOyLPPggw8ya9asQ9KsDme51dXVce+99/Lmm29yzjnn0K1btxbHtW7dOpYuXUpiYmK4M0F2djZvvPEGRqOR8ePHt3nuAoEAtbW14Wqwpun3TSMDDz/8MDNnzjysgTNz5kymTZsWfj6Hw8G8efPYv38/p59+OgMHDjxkHkINfUI+uZYoKSmJ4447jrrqGv7z79lERUTi9nhJSUyiQ0YmAeWPtRM7atApqsai77+juraW2NhYzj///EN0tl9++YVVq1aFw1AHt4doSn369GHs2LF88sknzbzj+/btY968eb+7iC+//DK//PIL55xzDieffDJdu3bFZrM1A1xdXR3Lli3j2Wef5fvvvycqKopLLrkkXBZ5MDgVReHjjz+mvr6e888/n549e4bF7SuvvMK5555L7969j4rLVVVVsWHDBsrKyhAEgY4dO9K/f38yMzPDuthpp51GfHw89913X7iKS5ZlLr/8cu69996wjhk6+SczM5MrrrgCRVHYvn07e/fupbS0NJxdLUkSZrOZyMhIOnbsSL9+/YiOjm42/pC7Zdq0aXz4wQcU79/PKRdMwOfz6Um5x6C5Tptb+guAKEnU1NZy1syLWb9pIzNmzODdd99tprPl5eVx3nnnsXr1ahISEvj000+bNZ85HH3xxRfhHhtNF+hIi3o4MRUbG0tubi49evQgOTkZURQpLi5mw4YNbN68OSzyL7vsMubMmRN27h4MusLCQiZOnMiePXuYP38+J598Mvn5+ZxxxhkYjUY+//zzQ4qc2ypaGxsbKSoqYsOGDezYsYMOHTpw/PHHk56eHuZGdXV1zJkzh9mzZzN16lSeeeaZcN8Yp9PJunXryM7OJjo6mk2bNrFs2TIKCgro378/GRkZREdHExkZidlsDseKTSYTdrv9sMadIAh4PB7OP/981qz6jU9ee5uOmVnh0tM/6js5qnMkDLKBdZs2MP3yC2h0N/Lm3Lmce865zUTSzTffHHbeTpkyhffff/93ayScTifnnXcen3/+eYuL9XuL25prQK/Mnz9/frNa3IPpu+++4/TTT6dPnz58++23FBYWcvXVV1NeXs68efPo2LEjX375JT169GDw4MEt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dRWbNm3i6aefJj09nWuuuSasrPt8PrZv306nTp1aFYs93HhC33G5XDQ2NpKQkNBM3Tj4+263m507d7Jy5UoEQWD69OlHBTiXy8WTTz1Fwd58unTO4anZT1BdV4vVYsFiNuN2ufArgWOGk2MKOkmS2LRtC/964jEq6qvRNI3U1BQsVsvRDU6WMZvNOJ3OVqVLh9waRUVFREVFHVHB/z3au3cvNTU1SJKEoii88847jBs3jocffpiKigpeeOEF+vXrh6qq4eaKVVVVvP3223944/r9fj799FOKioro0qULaWlpmEwmXC5XuGvUrl272Lp1K6Iocs455zB9+nTsdnuzJj6t+S1VVXnppZd4+623uPXq67nh8pmUllewa+9uLBYz/Xr01p3YxzB175gfWlpRU8WoTv2pqKvkw7JvSMvIOGIK+pHIZDKRlJTE3r17qa6ubpWYrq6uZuvWrXTo0OEPgS7Ukcput+P3+1mzZg0zZsxg69atXH755QwfPpz333+fhQsX8sMPP1BRUcEFF1wQbtjY2sjI4bhdqEXsypUrWbp0KV9//TXFxcXU1NSgqirR0dFkZ2czY8YMJk6cGObobQFcyCD89JNPefTfj6KqKiajGYNsJC0lhaz0dNDA5/cd84LrYwo6TdNwNDTQN7kTQ0ZOpqCihJjY6ObWRxt2jNlsZtCgQXzxxResXr06rD8didatW8fOnTu56KKLjroJY9NCoZB/y+fzsW7dOqxWK+vWrWPSpEmUlJQQCAQwGo2YzWYmTJiA0+nkzTffZMCAAYwcOfKogWexWBg7dixjx44Nt1xzu93Isozdbsdut4d1uqPpSCUEY903/N8NVNfWIGhQXVONoinhUNqfRcesilYQBBRVob6+gXh7ND1Scph78QOc2vM4QmfwHs35WOPGjSMuLo4333yTysrKIyY+1tfXM2fOHARBYOrUqUddae92u8PRiHCRtSggyhIul4vVq1dTWFiIoqkYTXoDmuzsbCorKznzzDO58cYbmTlzJmvW/HbU1fZNayZMJhMJCQlkZmaSmppKZGRk+LjSo83je++997h65kxKy8qItUVy1oiTUQMKfp//T+8W+gdqJARAOMB6BfAHAngaXSTZo0BR6JqQRa8aO4Fl+Si1LjS08JEYmhZ6HXnS+vXrxwUXXMDSpUu58cYbKSgoOKQiXhAEampquPfe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" alt="ADN Barfero" class="logo-img">
+    <div>
+      <h1>ADN Barfero</h1>
+      <span class="tag">Panel de Gestión</span>
+    </div>
+  </div>
+  <button id="syncBadge" class="sync-badge" type="button"></button>
+</div>
+<nav id="nav"></nav>
+<main id="main"></main>
+<div id="syncOverlay" class="modal-overlay" style="display:none;">
+  <div class="modal-box" id="syncBox" style="max-width:480px;"></div>
+</div>
+
+<script>
+const PRODUCTOS_DEFAULT = [
+  { id:"PRD-001", nombre:"Pollo perro", precio:9800 },
+  { id:"PRD-002", nombre:"Carne perro", precio:12000 },
+  { id:"PRD-003", nombre:"Pescado perro", precio:9000 },
+  { id:"PRD-004", nombre:"Pollo perro S/HC", precio:13200 },
+  { id:"PRD-005", nombre:"Pollo gato", precio:11200 },
+  { id:"PRD-006", nombre:"Carne gato", precio:13800 },
+  { id:"PRD-007", nombre:"Pescado gato", precio:10000 },
+  { id:"PRD-008", nombre:"Pollo gato S/HC", precio:15800 },
+  { id:"PRD-009", nombre:"Hueso carnoso molido", precio:14500 },
+];
+const CAJAS = { ninguna:"Sin caja", chica:"Caja chica (5kg)", grande:"Caja grande (10kg)" };
+
+// ---------------- COSTOS: insumos, recetas, costos fijos ----------------
+// Valores iniciales tomados de ADN_Barfero_Costos.xlsx (hoja del cliente).
+// tipo de insumo define cómo se calcula el "costo neto":
+//   normal       -> bruto / (1 - merma)
+//   caja         -> bruto / (1 - merma) / boxKg        (ej: cajón de pollo entero, con merma)
+//   caja_kg      -> bruto / boxKg                       (precio del cajón ÷ su peso, sin merma)
+//   caja_raw     -> bruto                                (precio de la caja de cartón entera, se usa como insumo de otro cálculo)
+//   promedio_cajas  -> promedio del costo neto de los insumos en "refs" (ej: Verdura = promedio de 2 cajones)
+//   caja_promedio   -> suma de los insumos en "refs" dividido "prorrateoKg" (ej: caja prom. = (caja grande + caja chica) / 15kg)
+const INSUMOS_DEFAULT = [
+  { id:"INS-001", nombre:"Cajón de pollo (20 kg)", tipo:"caja", bruto:57000, merma:0.12, boxKg:20 },
+  { id:"INS-002", nombre:"Carne", tipo:"normal", bruto:5800, merma:0.4 },
+  { id:"INS-003", nombre:"Hígado", tipo:"normal", bruto:5000, merma:0 },
+  { id:"INS-004", nombre:"Corazón", tipo:"normal", bruto:6400, merma:0.1 },
+  { id:"INS-005", nombre:"Riñón", tipo:"normal", bruto:6000, merma:0.1 },
+  { id:"INS-006", nombre:"Tráqueas", tipo:"normal", bruto:2500, merma:0 },
+  { id:"INS-007", nombre:"Verdura", tipo:"promedio_cajas", refs:["INS-014","INS-015"] },
+  { id:"INS-008", nombre:"Bolsa", tipo:"normal", bruto:190, merma:0 },
+  { id:"INS-009", nombre:"Etiqueta", tipo:"normal", bruto:463, merma:0 },
+  { id:"INS-010", nombre:"Caja promedio", tipo:"caja_promedio", refs:["INS-011","INS-012"], prorrateoKg:15 },
+  { id:"INS-011", nombre:"Caja 30x30x20 (10 kg)", tipo:"caja_raw", bruto:1315 },
+  { id:"INS-012", nombre:"Caja 30x20x20 (5 kg)", tipo:"caja_raw", bruto:881 },
+  { id:"INS-013", nombre:"Merluza", tipo:"normal", bruto:2200, merma:0 },
+  { id:"INS-014", nombre:"Cajón de zanahoria (19 kg)", tipo:"caja_kg", bruto:36000, boxKg:19 },
+  { id:"INS-015", nombre:"Cajón de zapallito (14 kg)", tipo:"caja_kg", bruto:22000, boxKg:14 },
+];
+// Receta: cantidad de insumo (kg) por 1kg de producto terminado.
+const RECETAS_DEFAULT = {
+  "PRD-001": { "INS-001":0.8, "INS-003":0.05, "INS-005":0.05, "INS-007":0.1, "INS-009":1.0, "INS-010":0.8 },
+  "PRD-002": { "INS-001":0.5, "INS-002":0.3, "INS-003":0.05, "INS-005":0.05, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8 },
+  "PRD-003": { "INS-001":0.5, "INS-003":0.05, "INS-005":0.05, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8, "INS-013":0.3 },
+  "PRD-004": { "INS-001":0.8, "INS-003":0.05, "INS-005":0.05, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8 },
+  "PRD-005": { "INS-001":0.7, "INS-003":0.1, "INS-004":0.1, "INS-005":0.1, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8 },
+  "PRD-006": { "INS-001":0.4, "INS-002":0.3, "INS-003":0.1, "INS-004":0.1, "INS-005":0.1, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8 },
+  "PRD-007": { "INS-001":0.4, "INS-003":0.1, "INS-004":0.1, "INS-005":0.1, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8, "INS-013":0.3 },
+  "PRD-008": { "INS-001":0.7, "INS-003":0.1, "INS-004":0.1, "INS-005":0.1, "INS-007":0.1, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8 },
+  "PRD-009": { "INS-001":1.0, "INS-008":1.0, "INS-009":1.0, "INS-010":0.8 },
+};
+const COSTOS_FIJOS_DEFAULT = {
+  items: [
+    { nombre:"Alquiler", monto:650000 },
+    { nombre:"Luz", monto:194089 },
+    { nombre:"Gas", monto:16500 },
+    { nombre:"Agua", monto:9000 },
+    { nombre:"Monotributo", monto:83000 },
+    { nombre:"Internet", monto:20000 },
+    { nombre:"Empretienda", monto:10000 },
+  ],
+  manoDeObra: 476000,
+};
+// Prorrateo por producto (% de facturación, % de kilos, demanda prom. mensual) — de la hoja PRODUCTOS.
+const PRODUCTOS_META = {
+  "PRD-001": { prorrFact:0.321, prorrKg:0.363, demanda:210.75 },
+  "PRD-002": { prorrFact:0.21,  prorrKg:0.193, demanda:112.25 },
+  "PRD-003": { prorrFact:0.075, prorrKg:0.093, demanda:54 },
+  "PRD-004": { prorrFact:0.051, prorrKg:0.041, demanda:23.625 },
+  "PRD-005": { prorrFact:0.158, prorrKg:0.155, demanda:90.125 },
+  "PRD-006": { prorrFact:0.055, prorrKg:0.044, demanda:25.5 },
+  "PRD-007": { prorrFact:0.042, prorrKg:0.045, demanda:26.375 },
+  "PRD-008": { prorrFact:0.052, prorrKg:0.034, demanda:19.75 },
+  "PRD-009": { prorrFact:0.036, prorrKg:0.031, demanda:17.75 },
+};
+
+function loadInsumos(){ return loadJSON("abf_insumos", INSUMOS_DEFAULT); }
+function saveInsumos(v){ saveJSON("abf_insumos", v); }
+function loadRecetas(){ return loadJSON("abf_recetas", RECETAS_DEFAULT); }
+function saveRecetas(v){ saveJSON("abf_recetas", v); }
+function loadCostosFijos(){ return loadJSON("abf_costos_fijos", COSTOS_FIJOS_DEFAULT); }
+function saveCostosFijos(v){ saveJSON("abf_costos_fijos", v); }
+function loadProductos(){
+  const precios = loadJSON("abf_productos_precios", {});
+  return PRODUCTOS_DEFAULT.map(p => ({ ...p, precio: precios[p.id] !== undefined ? precios[p.id] : p.precio }));
+}
+function savePrecioProducto(id, precio){
+  const precios = loadJSON("abf_productos_precios", {});
+  precios[id] = precio;
+  saveJSON("abf_productos_precios", precios);
+}
+
+let INSUMOS = loadInsumos();
+let RECETAS = loadRecetas();
+let COSTOS_FIJOS = loadCostosFijos();
+const PRODUCTOS = loadProductos();
+
+function costoNetoInsumo(id){
+  const ins = INSUMOS.find(i => i.id === id);
+  if (!ins) return 0;
+  if (ins.tipo === "normal") return ins.bruto / (1 - (ins.merma||0));
+  if (ins.tipo === "caja") return ins.bruto / (1 - (ins.merma||0)) / ins.boxKg;
+  if (ins.tipo === "caja_kg") return ins.bruto / ins.boxKg;
+  if (ins.tipo === "caja_raw") return ins.bruto;
+  if (ins.tipo === "promedio_cajas") return ins.refs.reduce((a,r)=>a+costoNetoInsumo(r),0) / ins.refs.length;
+  if (ins.tipo === "caja_promedio") return ins.refs.reduce((a,r)=>a+costoNetoInsumo(r),0) / ins.prorrateoKg;
+  return 0;
+}
+function totalFijosSinMO(){ return COSTOS_FIJOS.items.reduce((a,i)=>a+i.monto,0); }
+function costoVariableUnitario(prdId){
+  const receta = RECETAS[prdId] || {};
+  return Object.entries(receta).reduce((a,[insId,qty]) => a + costoNetoInsumo(insId)*qty, 0);
+}
+function costoFijoUnitario(prdId){
+  const meta = PRODUCTOS_META[prdId];
+  if (!meta || !meta.demanda) return 0;
+  return (meta.prorrFact*totalFijosSinMO() + COSTOS_FIJOS.manoDeObra*meta.prorrKg) / meta.demanda;
+}
+function costoTotalUnitario(prdId){ return costoVariableUnitario(prdId) + costoFijoUnitario(prdId); }
+
+// ---------------- STOCK (lotes por fecha de elaboración, descuento FIFO) ----------------
+function loadStock(){ return loadJSON("abf_stock", []); }
+function saveStock(v){ saveJSON("abf_stock", v); }
+let STOCK = loadStock();
+function genLoteId(){ return "lote-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,6); }
+
+function stockDisponible(producto){
+  return STOCK.filter(l => l.producto === producto).reduce((a,l) => a + l.kilosRestantes, 0);
+}
+// Descuenta kg del/los lote(s) más viejos con stock > 0. Devuelve qué lotes tocó (para poder
+// restaurarlos si la venta se edita o se borra) y cuánto no pudo descontar por falta de stock.
+function consumirStock(producto, kg){
+  const consumos = [];
+  let restante = kg;
+  const lotes = STOCK.filter(l => l.producto === producto && l.kilosRestantes > 0)
+    .sort((a,b) => a.fechaElaboracion < b.fechaElaboracion ? -1 : a.fechaElaboracion > b.fechaElaboracion ? 1 : 0);
+  for (const lote of lotes){
+    if (restante <= 0) break;
+    const tomar = Math.min(lote.kilosRestantes, restante);
+    lote.kilosRestantes -= tomar;
+    restante -= tomar;
+    consumos.push({ loteId: lote.id, kilos: tomar });
+  }
+  saveStock(STOCK);
+  return { consumos, faltante: Math.max(0, restante) };
+}
+function restaurarStock(consumos){
+  if (!consumos || !consumos.length) return;
+  consumos.forEach(c => {
+    const lote = STOCK.find(l => l.id === c.loteId);
+    if (lote) lote.kilosRestantes += c.kilos;
+  });
+  saveStock(STOCK);
+}
+
+const TERRACOTA="#FF8FC4", SAGE="#D9509B", SAND="#F7E4EF", INK="#241D20";
+
+function loadJSON(key, fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  if (SYNC_KEYS.indexOf(key) >= 0) marcarSucio(key);
+}
+function loadVentas(){ return loadJSON("abf_ventas", []); }
+function saveVentas(v){ saveJSON("abf_ventas", v); }
+function loadClientes(){ return loadJSON("abf_clientes", {}); }
+function saveClientes(c){ saveJSON("abf_clientes", c); }
+
+// ---------------- SINCRONIZACIÓN CON GOOGLE SHEETS ----------------
+// La app sigue guardando todo en este dispositivo (rápido y anda sin internet). Además, cada cambio
+// se sube al Sheet, y al abrir o volver a la app se baja lo último del Sheet.
+const SYNC_KEYS = ["abf_ventas","abf_stock","abf_clientes","abf_insumos","abf_recetas","abf_costos_fijos","abf_productos_precios"];
+let syncCfg = loadJSON("abf_sync_cfg", null);                 // { url, token } — queda solo en este dispositivo
+const syncSucias = new Set(loadJSON("abf_sync_sucias", []));   // claves con cambios locales todavía no subidos
+let syncEstado = (syncCfg && syncCfg.url && syncCfg.token) ? "ok" : "off";   // off | ok | guardando | error
+let syncEnCurso = false, syncTimer = null, syncUltimoPull = 0, syncUltimoError = "", syncListeners = false;
+
+function syncConfigurado(){ return !!(syncCfg && syncCfg.url && syncCfg.token); }
+function persistirSucias(){ try{ localStorage.setItem("abf_sync_sucias", JSON.stringify([...syncSucias])); }catch(e){} }
+function pintarSyncBadge(el){
+  const t = { off:"☁️ Conectar a Sheets", ok:"🟢 Sincronizado", guardando:"🟡 Guardando…", error:"🔴 Sin conexión" };
+  el.textContent = t[syncEstado] || t.off;
+  el.title = syncEstado === "error"
+    ? "No se pudo sincronizar (" + syncUltimoError + "). Tus cambios siguen guardados en este dispositivo y se suben solos cuando vuelva la conexión."
+    : "Conexión con Google Sheets";
+}
+function setSyncEstado(s){
+  syncEstado = s;
+  const el = document.getElementById("syncBadge");
+  if (el) pintarSyncBadge(el);
+}
+function syncMensajeError(e){
+  const m = String((e && e.message) || e);
+  if (m === "no_autorizado") return "la clave no coincide con la del script";
+  if (m === "token_sin_configurar") return "falta cambiar TOKEN en el script";
+  if (/abort/i.test(m)) return "el Sheet tardó demasiado en responder";
+  if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return "sin internet o URL incorrecta";
+  return m;
+}
+function marcarSucio(key){
+  if (!syncConfigurado()) return;
+  syncSucias.add(key); persistirSucias();
+  setSyncEstado("guardando");
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncEmpujar, 800);
+}
+async function syncLlamar(payload, cfg){
+  const c = cfg || syncCfg;
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), 30000);
+  try {
+    // text/plain evita el preflight de CORS, que Apps Script no soporta
+    const r = await fetch(c.url, { method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify({ token:c.token, ...payload }), signal: ctl.signal });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "error");
+    return j;
+  } finally { clearTimeout(to); }
+}
+function syncManejarFallo(fallo){
+  syncUltimoError = syncMensajeError(fallo);
+  setSyncEstado("error");
+  // con clave mal puesta reintentar no sirve; con falta de conexión sí
+  if (!/no_autorizado|token_sin_configurar/.test(String(fallo && fallo.message))){
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncCicloCompleto, 20000);
+  }
+}
+async function syncEmpujar(){
+  if (!syncConfigurado()) return;
+  if (syncEnCurso){ clearTimeout(syncTimer); syncTimer = setTimeout(syncEmpujar, 1500); return; }
+  if (syncSucias.size === 0){ if (syncEstado !== "error") setSyncEstado("ok"); return; }
+  syncEnCurso = true;
+  let fallo = null;
+  try {
+    for (const key of [...syncSucias]){
+      const snap = localStorage.getItem(key);
+      if (snap === null){ syncSucias.delete(key); continue; }
+      await syncLlamar({ action:"set", key, value: JSON.parse(snap) });
+      if (localStorage.getItem(key) === snap) syncSucias.delete(key);   // si cambió mientras subía, sigue pendiente
+      persistirSucias();
+    }
+  } catch(e){ fallo = e; }
+  syncEnCurso = false;
+  if (fallo){ syncManejarFallo(fallo); return; }
+  if (syncSucias.size){ setSyncEstado("guardando"); clearTimeout(syncTimer); syncTimer = setTimeout(syncEmpujar, 800); }
+  else setSyncEstado("ok");
+}
+function recargarEstado(){
+  INSUMOS = loadInsumos(); RECETAS = loadRecetas(); COSTOS_FIJOS = loadCostosFijos(); STOCK = loadStock();
+  loadProductos().forEach(f => { const p = PRODUCTOS.find(x => x.id === f.id); if (p) p.precio = f.precio; });
+}
+function refrescarVistaSiSePuede(){
+  const a = document.activeElement;
+  const editando = !!a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName || "");
+  const ov = document.getElementById("modalOverlay");
+  if (editando || (ov && ov.style.display === "flex")) return;   // no pisar lo que está tipeando
+  if (activeTab === "ventas") renderTablaVentas(); else renderMain();
+}
+async function syncTraer(){
+  if (!syncConfigurado() || syncEnCurso) return;
+  syncEnCurso = true;
+  let cambio = false, fallo = null;
+  try {
+    const j = await syncLlamar({ action:"getAll" });
+    const remoto = j.data || {};
+    for (const key of SYNC_KEYS){
+      if (syncSucias.has(key)) continue;                 // cambios locales sin subir: gana lo local
+      const rv = remoto[key];
+      if (rv === undefined){                             // el Sheet todavía no tiene esto: lo subimos
+        if (localStorage.getItem(key) !== null) syncSucias.add(key);
+        continue;
+      }
+      if ((key === "abf_ventas" || key === "abf_stock") && !Array.isArray(rv)) continue;
+      const nuevo = JSON.stringify(rv);
+      if (localStorage.getItem(key) !== nuevo){ localStorage.setItem(key, nuevo); cambio = true; }
+    }
+    persistirSucias();
+    syncUltimoPull = Date.now();
+  } catch(e){ fallo = e; }
+  syncEnCurso = false;
+  if (fallo){ syncManejarFallo(fallo); return; }
+  if (cambio){ recargarEstado(); refrescarVistaSiSePuede(); }
+  setSyncEstado(syncSucias.size ? "guardando" : "ok");
+}
+async function syncCicloCompleto(){
+  if (!syncConfigurado()) return;
+  await syncTraer();
+  await syncEmpujar();
+}
+function registrarListenersSync(){
+  if (syncListeners) return;
+  syncListeners = true;
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && Date.now() - syncUltimoPull > 15000) syncCicloCompleto();
+  });
+  window.addEventListener("online", () => syncCicloCompleto());
+  setInterval(() => { if (document.visibilityState === "visible") syncCicloCompleto(); }, 120000);
+}
+function iniciarSync(){
+  const badge = document.getElementById("syncBadge");
+  if (badge){ badge.addEventListener("click", abrirSyncModal); pintarSyncBadge(badge); }
+  if (!syncConfigurado()) return;
+  registrarListenersSync();
+  syncCicloCompleto();
+}
+function cerrarSyncModal(){ const ov = document.getElementById("syncOverlay"); if (ov) ov.style.display = "none"; }
+function abrirSyncModal(){
+  const ov = document.getElementById("syncOverlay"), box = document.getElementById("syncBox");
+  if (!ov || !box) return;
+  const conectado = syncConfigurado();
+  box.innerHTML = `
+    <h3 style="font-size:16px; margin-bottom:6px;">☁️ Conexión con Google Sheets</h3>
+    <p class="note">Pegá la URL de la implementación de Apps Script (termina en /exec) y la clave que pusiste en TOKEN. Se guarda solo en este dispositivo.</p>
+    <div class="form-grid" style="grid-template-columns:1fr;">
+      <div><label for="syncUrl">URL</label><input type="text" id="syncUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
+      <div><label for="syncToken">Clave</label><input type="password" id="syncToken" autocomplete="off"></div>
+    </div>
+    <p class="note" id="syncMsg"></p>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      ${conectado ? '<button class="btn-text btn-danger" id="syncDesconectar">Desconectar</button>' : '<span></span>'}
+      <div style="display:flex; gap:10px;">
+        <button class="btn-text" id="syncCerrar">Cerrar</button>
+        <button class="btn" id="syncGuardar">Probar y guardar</button>
+      </div>
+    </div>`;
+  const msg = document.getElementById("syncMsg");
+  if (conectado){
+    document.getElementById("syncUrl").value = syncCfg.url;
+    document.getElementById("syncToken").value = syncCfg.token;
+    msg.textContent = syncEstado === "error" ? "Último error: " + syncUltimoError + "." : "Conectado.";
+  }
+  ov.style.display = "flex";
+  document.getElementById("syncCerrar").addEventListener("click", cerrarSyncModal);
+  if (conectado){
+    document.getElementById("syncDesconectar").addEventListener("click", () => {
+      syncCfg = null;
+      try{ localStorage.removeItem("abf_sync_cfg"); }catch(e){}
+      syncSucias.clear(); persistirSucias();
+      clearTimeout(syncTimer);
+      setSyncEstado("off");
+      cerrarSyncModal();
+    });
+  }
+  document.getElementById("syncGuardar").addEventListener("click", async () => {
+    const url = document.getElementById("syncUrl").value.trim();
+    const token = document.getElementById("syncToken").value.trim();
+    // la clave solo se manda a Google, nunca a otro dominio
+    if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){ msg.textContent = "La URL tiene que empezar con https://script.google.com/ y terminar en /exec."; return; }
+    if (!token){ msg.textContent = "Falta la clave."; return; }
+    msg.textContent = "Probando la conexión…";
+    const cfg = { url, token };
+    try {
+      await syncLlamar({ action:"ping" }, cfg);
+      const j = await syncLlamar({ action:"getAll" }, cfg);
+      const remoto = j.data || {};
+      const choca = ["abf_ventas","abf_stock"].some(k => {
+        const loc = loadJSON(k, []);
+        return remoto[k] !== undefined && loc.length > 0 && JSON.stringify(remoto[k]) !== JSON.stringify(loc);
+      });
+      if (choca && !confirm("El Sheet ya tiene datos distintos a los de este dispositivo. Si seguís, los datos de este dispositivo se reemplazan por los del Sheet. ¿Continuar?")){
+        msg.textContent = "No se conectó."; return;
+      }
+    } catch(e){ msg.textContent = "No pude conectar: " + syncMensajeError(e) + "."; return; }
+    syncCfg = cfg;
+    saveJSON("abf_sync_cfg", cfg);
+    registrarListenersSync();
+    cerrarSyncModal();
+    setSyncEstado("guardando");
+    syncCicloCompleto();
+  });
+}
+
+function fmtMoney(v){ return "$" + Math.round(v).toLocaleString("es-AR"); }
+function fmtKg(v){ return v.toLocaleString("es-AR",{maximumFractionDigits:1}) + " kg"; }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function monthOf(dateStr){ return dateStr.slice(0,7); }
+function monthLabel(m){
+  const [y,mo]=m.split("-");
+  const n=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  return n[parseInt(mo,10)-1]+" '"+y.slice(2);
+}
+function monthFull(m){
+  const [y,mo]=m.split("-");
+  const n=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  return n[parseInt(mo,10)-1]+" "+y;
+}
+function shiftMonth(m, delta){
+  const [y,mo]=m.split("-").map(Number);
+  const d = new Date(y, mo-1+delta, 1);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function sugerirCaja(kg){
+  if (kg === 5) return "chica";
+  if (kg === 10) return "grande";
+  return "ninguna";
+}
+
+let hideRevenue = loadJSON("abf_hide_revenue", false);
+let activeTab = "dashboard";
+let dashProducto = "TODOS";
+let dashMes = todayStr().slice(0,7);
+
+const TABS = [
+  { id:"dashboard", label:"🏠 Dashboard", ready:true },
+  { id:"ventas", label:"📝 Registro de Ventas", ready:true },
+  { id:"clientes", label:"🐶 Clientes", ready:true },
+  { id:"pronostico", label:"📈 Pronóstico", ready:true },
+  { id:"stock", label:"📦 Stock y Producción", ready:true },
+  { id:"precios", label:"💲 Precios y Costos", ready:true },
+];
+
+function renderNav(){
+  const nav = document.getElementById("nav");
+  nav.innerHTML = "";
+  TABS.forEach(t => {
+    const btn = document.createElement("button");
+    btn.innerHTML = t.label + (t.ready ? "" : '<span class="badge">pronto</span>');
+    if (t.id === activeTab) btn.className = "active";
+    btn.addEventListener("click", () => { activeTab=t.id; renderNav(); renderMain(); });
+    nav.appendChild(btn);
+  });
+}
+
+function renderMain(){
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  if (activeTab === "dashboard") return renderDashboard(main);
+  if (activeTab === "ventas") return renderVentas(main);
+  if (activeTab === "precios") return renderPrecios(main);
+  if (activeTab === "stock") return renderStock(main);
+  if (activeTab === "clientes") return renderClientes(main);
+  if (activeTab === "pronostico") return renderPronostico(main);
+  const tab = TABS.find(t => t.id === activeTab);
+  main.innerHTML = `<div class="card soon"><div class="paw-big">🐾</div><h2>${tab.label.replace(/^\S+\s/,"")}</h2><p>${tab.desc}</p><p style="font-size:12.5px;">Ya lo vamos a sumar acá mismo.</p></div>`;
+}
+
+// ---------------- DASHBOARD ----------------
+let dashChart = null;
+function renderDashboard(main){
+  const ventas = loadVentas();
+  const mes = dashMes;
+  const delMes = ventas.filter(v => monthOf(v.fecha) === mes);
+  const kgMes = delMes.reduce((a,v)=>a+v.kilos,0);
+  const factMes = delMes.reduce((a,v)=>a+v.total,0);
+  const cajasChicas = delMes.filter(v=>v.caja==="chica").length;
+  const cajasGrandes = delMes.filter(v=>v.caja==="grande").length;
+
+  const opciones = `<option value="TODOS">Todos los productos</option>` +
+    PRODUCTOS.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join("");
+
+  main.innerHTML = `
+    <div class="month-nav">
+      <button id="mesPrev" class="nav-arrow" title="Mes anterior">◀</button>
+      <h3 style="font-size:16px;">📅 ${monthFull(mes)}</h3>
+      <button id="mesNext" class="nav-arrow" title="Mes siguiente">▶</button>
+    </div>
+    <div class="kpi-row">
+      <div class="card kpi-card">
+        <div class="kpi-label">🥩 Kg vendidos</div>
+        <div class="kpi-value">${fmtKg(kgMes)}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Facturación
+          <button class="eye-btn" id="eyeBtn" title="Mostrar/ocultar">${hideRevenue?"🙈":"👁"}</button>
+        </div>
+        <div class="kpi-value">${hideRevenue ? "••••••" : fmtMoney(factMes)}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">📦 Cajas usadas</div>
+        <div class="kpi-value small">${cajasChicas} chicas · ${cajasGrandes} grandes</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-header">
+        <h3 style="font-size:16px;">Cómo van las ventas</h3>
+        <select id="selProducto">${opciones}</select>
+      </div>
+      <p class="note">Kilos vendidos por día — el número de arriba ya te dice el total, este gráfico solo acompaña</p>
+      <canvas id="chartMes" height="210"></canvas>
+      <p class="empty" id="chartEmptyMsg" style="display:none;">🐾 No hay ventas cargadas en ${monthFull(mes)}.</p>
+    </div>
+  `;
+
+  document.getElementById("eyeBtn").addEventListener("click", () => {
+    hideRevenue = !hideRevenue; saveJSON("abf_hide_revenue", hideRevenue); renderDashboard(main);
+  });
+  document.getElementById("mesPrev").addEventListener("click", () => { dashMes = shiftMonth(dashMes,-1); renderDashboard(main); });
+  document.getElementById("mesNext").addEventListener("click", () => { dashMes = shiftMonth(dashMes,1); renderDashboard(main); });
+  const selProducto = document.getElementById("selProducto");
+  selProducto.value = dashProducto;
+  selProducto.addEventListener("change", () => { dashProducto = selProducto.value; drawChart(); });
+
+  function drawChart(){
+    let filtradas = ventas.filter(v => monthOf(v.fecha) === mes);
+    let label = "Todos los productos";
+    if (dashProducto !== "TODOS"){
+      const p = PRODUCTOS.find(x=>x.id===dashProducto);
+      filtradas = filtradas.filter(v => v.producto === p.nombre);
+      label = p.nombre;
+    }
+    const porDia = {};
+    filtradas.forEach(v => { const d=v.fecha; porDia[d]=(porDia[d]||0)+v.kilos; });
+    const dias = Object.keys(porDia).sort(); // solo los días que ya tienen ventas cargadas
+    const labels = dias.map(d => parseInt(d.slice(8,10),10) + " " + monthLabel(mes).split(" ")[0]);
+    const data = dias.map(d => Math.round((porDia[d]||0)*10)/10);
+
+    const canvasEl = document.getElementById("chartMes");
+    const emptyMsg = document.getElementById("chartEmptyMsg");
+    if (dias.length === 0){
+      canvasEl.style.display = "none"; emptyMsg.style.display = "block";
+      if (dashChart) dashChart.destroy();
+      return;
+    }
+    canvasEl.style.display = "block"; emptyMsg.style.display = "none";
+
+    if (dashChart) dashChart.destroy();
+    if (typeof Chart === "undefined") return;
+    dashChart = new Chart(document.getElementById("chartMes"), {
+      type:"line",
+      data:{ labels, datasets:[{
+        label, data, borderColor:TERRACOTA, backgroundColor:"rgba(201,124,75,0.15)",
+        borderWidth:3, tension:0.4, fill:true, pointRadius:5, pointBackgroundColor:TERRACOTA,
+        pointBorderColor:"#fff", pointBorderWidth:2,
+      }]},
+      options:{
+        responsive:true,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>fmtKg(ctx.parsed.y) } } },
+        scales:{
+          x:{ grid:{display:false}, ticks:{color:INK, font:{size:13,family:"Nunito",weight:"600"}} },
+          y:{ grid:{color:SAND}, border:{display:false}, ticks:{color:"#B8A88C", font:{size:11}, maxTicksLimit:4} },
+        },
+      },
+    });
+  }
+  drawChart();
+}
+
+// ---------------- REGISTRO DE VENTAS ----------------
+function genId(){ return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7); }
+
+function statsCliente(nombre){
+  const key = (nombre||"").trim().toLowerCase();
+  if (!key) return null;
+  const propias = loadVentas().filter(v => (v.cliente||"").trim().toLowerCase() === key);
+  if (propias.length === 0) return null;
+  const puntos = Math.round(propias.reduce((a,v)=>a+v.kilos,0));
+  return { compras: propias.length, puntos };
+}
+
+let filtroTexto = "";
+let filtroProducto = "TODOS";
+let filtroDesde = "";
+let filtroHasta = "";
+
+function renderVentas(main){
+  const opciones = PRODUCTOS.map(p => `<option value="${p.id}">${p.nombre} — ${fmtMoney(p.precio)}/kg</option>`).join("");
+  const cajaOpciones = Object.entries(CAJAS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+  const filtroOpciones = `<option value="TODOS">Todos los productos</option>` + PRODUCTOS.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join("");
+
+  main.innerHTML = `
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:14px;">🐾 Registrar una venta</h3>
+      <div class="form-grid">
+        <div>
+          <label for="inpFecha">Fecha</label>
+          <input type="date" id="inpFecha" value="${todayStr()}">
+        </div>
+        <div>
+          <label for="inpProducto">Tipo de vianda</label>
+          <select id="inpProducto">${opciones}</select>
+        </div>
+        <div>
+          <label for="inpKilos">Kilos</label>
+          <input type="number" id="inpKilos" min="0.1" step="0.1" placeholder="Ej: 5">
+        </div>
+        <div>
+          <label for="inpCaja">¿Lleva caja?</label>
+          <select id="inpCaja">${cajaOpciones}</select>
+        </div>
+        <div>
+          <label for="inpCliente">Cliente (nombre o DNI)</label>
+          <input type="text" id="inpCliente" placeholder="Opcional">
+        </div>
+      </div>
+      <div class="cliente-info" id="clienteInfo"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div id="totalPreview" style="font-size:14px; color:var(--slate); font-weight:600;"></div>
+        <button class="btn" id="btnRegistrar">Registrar venta 🐾</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-header">
+        <h3 style="font-size:16px;">Últimas ventas</h3>
+      </div>
+      <div class="form-grid" style="margin-bottom:10px;">
+        <input type="text" id="inpBuscar" placeholder="Buscar por cliente...">
+        <select id="selFiltroProducto">${filtroOpciones}</select>
+        <input type="date" id="inpFiltroDesde" title="Desde">
+        <input type="date" id="inpFiltroHasta" title="Hasta">
+      </div>
+      <p class="note" id="ventasHint"></p>
+      <div id="tablaVentas"></div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay" style="display:none;">
+      <div class="modal-box" id="modalBox"></div>
+    </div>
+  `;
+
+  const inpProducto=document.getElementById("inpProducto"), inpKilos=document.getElementById("inpKilos");
+  const inpCaja=document.getElementById("inpCaja"), inpCliente=document.getElementById("inpCliente");
+  const totalPreview=document.getElementById("totalPreview"), clienteInfo=document.getElementById("clienteInfo");
+  const inpBuscar=document.getElementById("inpBuscar"), selFiltroProducto=document.getElementById("selFiltroProducto");
+
+  function updatePreview(){
+    const prod = PRODUCTOS.find(p => p.id === inpProducto.value);
+    const kg = parseFloat(inpKilos.value) || 0;
+    const disp = stockDisponible(prod.nombre);
+    let txt = kg > 0 ? "Total: " + fmtMoney(prod.precio*kg) + "  ·  " + fmtMoney(prod.precio) + "/kg  ·  " : "";
+    txt += "Stock disponible: " + fmtKg(disp);
+    if (kg > disp) txt += " ⚠️ no alcanza";
+    totalPreview.textContent = txt;
+  }
+  function checkCliente(){
+    const s = statsCliente(inpCliente.value);
+    if (s){
+      clienteInfo.style.display = "block";
+      clienteInfo.textContent = "🐾 Cliente reconocido — compra n.º " + (s.compras+1) + ", " + s.puntos + " puntos acumulados.";
+    } else { clienteInfo.style.display = "none"; }
+  }
+  inpProducto.addEventListener("change", updatePreview);
+  inpKilos.addEventListener("input", () => { inpCaja.value = sugerirCaja(parseFloat(inpKilos.value)); updatePreview(); });
+  inpCliente.addEventListener("input", checkCliente);
+  updatePreview();
+
+  document.getElementById("btnRegistrar").addEventListener("click", () => {
+    const kg = parseFloat(inpKilos.value);
+    if (!kg || kg <= 0){ inpKilos.focus(); return; }
+    const prod = PRODUCTOS.find(p => p.id === inpProducto.value);
+    const fecha = document.getElementById("inpFecha").value || todayStr();
+    const total = prod.precio * kg;
+
+    const { consumos, faltante } = consumirStock(prod.nombre, kg);
+    const ventas = loadVentas();
+    const hora = new Date().toTimeString().slice(0,5);
+    ventas.unshift({ id:genId(), fecha, hora, producto:prod.nombre, kilos:kg, precio:prod.precio, total, caja:inpCaja.value, cliente: inpCliente.value.trim()||null, consumos });
+    saveVentas(ventas);
+    if (faltante > 0.001){
+      alert("Ojo: no había stock suficiente cargado de " + prod.nombre + ". Faltaron " + fmtKg(faltante) + " sin descontar de ningún lote — la venta se registró igual.");
+    }
+
+    inpKilos.value=""; inpCliente.value=""; inpCaja.value="ninguna";
+    updatePreview(); checkCliente(); renderTablaVentas();
+  });
+
+  inpBuscar.addEventListener("input", () => { filtroTexto = inpBuscar.value; renderTablaVentas(); });
+  selFiltroProducto.addEventListener("change", () => { filtroProducto = selFiltroProducto.value; renderTablaVentas(); });
+  document.getElementById("inpFiltroDesde").value = filtroDesde;
+  document.getElementById("inpFiltroHasta").value = filtroHasta;
+  document.getElementById("inpFiltroDesde").addEventListener("change", (e) => { filtroDesde = e.target.value; renderTablaVentas(); });
+  document.getElementById("inpFiltroHasta").addEventListener("change", (e) => { filtroHasta = e.target.value; renderTablaVentas(); });
+
+  renderTablaVentas();
+}
+
+function ventasFiltradas(){
+  const todas = loadVentas();
+  const texto = filtroTexto.trim().toLowerCase();
+  return todas.filter(v => {
+    if (filtroProducto !== "TODOS" && v.producto !== filtroProducto) return false;
+    if (texto && !((v.cliente||"").toLowerCase().includes(texto))) return false;
+    if (filtroDesde && v.fecha < filtroDesde) return false;
+    if (filtroHasta && v.fecha > filtroHasta) return false;
+    return true;
+  });
+}
+
+function renderTablaVentas(){
+  const el = document.getElementById("tablaVentas");
+  const hint = document.getElementById("ventasHint");
+  if (!el) return;
+  const hayFiltro = filtroTexto.trim() !== "" || filtroProducto !== "TODOS" || filtroDesde !== "" || filtroHasta !== "";
+  const todas = ventasFiltradas();
+  const ventas = hayFiltro ? todas : todas.slice(0,15);
+  if (hint) hint.textContent = hayFiltro
+    ? (ventas.length + " resultado" + (ventas.length===1?"":"s") + " — hacé click en una venta para ver el detalle")
+    : "Mostrando las últimas 15 — hacé click en una venta para editarla o borrarla";
+
+  if (ventas.length === 0){ el.innerHTML = '<div class="empty">🐾 No encontré ventas con ese filtro.</div>'; return; }
+  const cajaChip = (c) => c==="chica" ? '<span class="caja-chip caja-chica">Caja chica</span>'
+                        : c==="grande" ? '<span class="caja-chip caja-grande">Caja grande</span>'
+                        : '<span class="caja-chip caja-ninguna">—</span>';
+  const rows = ventas.map(v => `
+    <tr data-id="${v.id}" class="fila-venta">
+      <td>${v.fecha}</td>
+      <td>${v.producto}</td>
+      <td>${fmtKg(v.kilos)}</td>
+      <td>${cajaChip(v.caja)}</td>
+      <td>${fmtMoney(v.total)}</td>
+      <td>${v.cliente || "—"}</td>
+    </tr>`).join("");
+  el.innerHTML = `<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Producto</th><th>Kilos</th><th>Caja</th><th>Total</th><th>Cliente</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  el.querySelectorAll(".fila-venta").forEach(tr => {
+    tr.addEventListener("click", () => openVentaModal(tr.getAttribute("data-id")));
+  });
+}
+
+// ---------------- MODAL: detalle / editar / borrar venta ----------------
+function closeModal(){
+  const ov = document.getElementById("modalOverlay");
+  if (ov) ov.style.display = "none";
+}
+function openVentaModal(id){
+  const ventas = loadVentas();
+  const venta = ventas.find(v => v.id === id);
+  if (!venta) return;
+  const box = document.getElementById("modalBox");
+  const opciones = PRODUCTOS.map(p => `<option value="${p.id}" ${p.nombre===venta.producto?"selected":""}>${p.nombre}</option>`).join("");
+  const cajaOpciones = Object.entries(CAJAS).map(([k,v])=>`<option value="${k}" ${k===venta.caja?"selected":""}>${v}</option>`).join("");
+  box.innerHTML = `
+    <h3 style="font-size:16px; margin-bottom:14px;">Detalle de la venta</h3>
+    <div class="form-grid">
+      <div><label>Fecha</label><input type="date" id="mFecha" value="${venta.fecha}"></div>
+      <div><label>Hora</label><input type="time" id="mHora" value="${venta.hora||""}"></div>
+      <div><label>Tipo de vianda</label><select id="mProducto">${opciones}</select></div>
+      <div><label>Kilos</label><input type="number" id="mKilos" min="0.1" step="0.1" value="${venta.kilos}"></div>
+      <div><label>¿Lleva caja?</label><select id="mCaja">${cajaOpciones}</select></div>
+      <div><label>Cliente</label><input type="text" id="mCliente" value="${venta.cliente||""}"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:4px;">
+      <button class="btn-text btn-danger" id="mBorrar">Eliminar venta</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-text" id="mCancelar">Cancelar</button>
+        <button class="btn" id="mGuardar">Guardar cambios</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("modalOverlay").style.display = "flex";
+
+  document.getElementById("mCancelar").addEventListener("click", closeModal);
+  document.getElementById("mGuardar").addEventListener("click", () => {
+    const prod = PRODUCTOS.find(p => p.id === document.getElementById("mProducto").value);
+    const kg = parseFloat(document.getElementById("mKilos").value) || venta.kilos;
+    const fecha = document.getElementById("mFecha").value || venta.fecha;
+    const caja = document.getElementById("mCaja").value;
+    const cliente = document.getElementById("mCliente").value.trim() || null;
+    const hora = document.getElementById("mHora").value || venta.hora;
+
+    restaurarStock(venta.consumos);
+    const { consumos, faltante } = consumirStock(prod.nombre, kg);
+    const actualizada = { ...venta, fecha, hora, producto:prod.nombre, kilos:kg, precio:prod.precio, total:prod.precio*kg, caja, cliente, consumos };
+    const nuevas = loadVentas().map(v => v.id === id ? actualizada : v);
+    saveVentas(nuevas);
+    if (faltante > 0.001){
+      alert("Ojo: no había stock suficiente cargado de " + prod.nombre + " para esta cantidad. Faltaron " + fmtKg(faltante) + ".");
+    }
+    closeModal();
+    renderTablaVentas();
+  });
+  document.getElementById("mBorrar").addEventListener("click", () => {
+    if (!confirm("¿Seguro que querés eliminar esta venta? No se puede deshacer.")) return;
+    restaurarStock(venta.consumos);
+    const nuevas = loadVentas().filter(v => v.id !== id);
+    saveVentas(nuevas);
+    closeModal();
+    renderTablaVentas();
+  });
+}
+
+// ---------------- PRECIOS Y COSTOS ----------------
+function renderPrecios(main){
+  main.innerHTML = `
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">💰 Costos fijos mensuales</h3>
+      <p class="note">Estos gastos se reparten entre los productos según cuánto facturan y cuántos kilos representan cada uno. Si los cambiás, se recalcula todo solo.</p>
+      <div class="table-scroll"><table id="tablaFijos"></table></div>
+      <div style="margin-top:10px; font-family:'Quicksand',sans-serif; font-weight:700; color:var(--pink-dark); font-size:14.5px;">
+        Total costos fijos (sin mano de obra): <span id="totalFijosSinMO"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">🥩 Insumos</h3>
+      <p class="note">Editá el costo de compra y la merma de cada insumo — el costo neto por kg se recalcula solo. Verdura y Caja promedio se calculan a partir de los cajones/cajas de abajo.</p>
+      <div class="table-scroll"><table id="tablaInsumos" style="min-width:560px;"></table></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">💲 Precio por producto</h3>
+      <p class="note">El precio actual es el que ya tenés cargado — editalo cuando quieras. Para ver la receta de cada vianda y simular otro margen, hacé click en "Receta y margen".</p>
+      <div class="table-scroll"><table id="tablaPrecios" style="min-width:620px;"></table></div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay" style="display:none;">
+      <div class="modal-box" id="modalBox" style="max-width:540px;"></div>
+    </div>
+  `;
+  renderTablaFijos();
+  renderTablaInsumos();
+  renderTablaPrecios();
+}
+
+function renderTablaFijos(){
+  const el = document.getElementById("tablaFijos");
+  if (!el) return;
+  const rows = COSTOS_FIJOS.items.map((it,idx) => `
+    <tr>
+      <td>${it.nombre}</td>
+      <td><input type="number" class="fijo-monto" data-idx="${idx}" value="${it.monto}" min="0" step="100" style="min-height:38px; padding:6px 10px;"></td>
+    </tr>`).join("");
+  el.innerHTML = `
+    <thead><tr><th>Gasto</th><th>Monto mensual</th></tr></thead>
+    <tbody>${rows}
+      <tr>
+        <td>Mano de obra</td>
+        <td><input type="number" id="inpManoDeObra" value="${COSTOS_FIJOS.manoDeObra}" min="0" step="100" style="min-height:38px; padding:6px 10px;"></td>
+      </tr>
+    </tbody>`;
+  el.querySelectorAll(".fijo-monto").forEach(inp => {
+    inp.addEventListener("input", () => {
+      COSTOS_FIJOS.items[parseInt(inp.dataset.idx,10)].monto = parseFloat(inp.value)||0;
+      saveCostosFijos(COSTOS_FIJOS);
+      document.getElementById("totalFijosSinMO").textContent = fmtMoney(totalFijosSinMO());
+      renderTablaPrecios();
+    });
+  });
+  document.getElementById("inpManoDeObra").addEventListener("input", (e) => {
+    COSTOS_FIJOS.manoDeObra = parseFloat(e.target.value)||0;
+    saveCostosFijos(COSTOS_FIJOS);
+    renderTablaPrecios();
+  });
+  document.getElementById("totalFijosSinMO").textContent = fmtMoney(totalFijosSinMO());
+}
+
+function renderTablaInsumos(){
+  const el = document.getElementById("tablaInsumos");
+  if (!el) return;
+  const rows = INSUMOS.map(ins => {
+    const neto = costoNetoInsumo(ins.id);
+    if (ins.tipo === "promedio_cajas" || ins.tipo === "caja_promedio"){
+      const fuente = ins.refs.map(id => INSUMOS.find(i=>i.id===id).nombre).join(" + ");
+      return `<tr>
+        <td>${ins.nombre}</td>
+        <td colspan="2" style="color:var(--slate); font-size:12.5px;">📊 calculado: ${fuente}</td>
+        <td style="font-weight:700;">${fmtMoney(neto)}/kg</td>
+      </tr>`;
+    }
+    const tieneMerma = (ins.tipo === "normal" || ins.tipo === "caja");
+    const mermaPct = Math.round((ins.merma||0)*1000)/10;
+    return `<tr>
+      <td>${ins.nombre}</td>
+      <td><input type="number" class="insumo-bruto" data-id="${ins.id}" value="${ins.bruto}" min="0" step="1" style="min-height:38px; padding:6px 10px;"></td>
+      <td>${tieneMerma ? `<input type="number" class="insumo-merma" data-id="${ins.id}" value="${mermaPct}" min="0" max="90" step="1" style="min-height:38px; padding:6px 10px; width:80px; display:inline-block;">%` : '<span style="color:var(--slate);">—</span>'}</td>
+      <td style="font-weight:700;">${fmtMoney(neto)}/kg</td>
+    </tr>`;
+  }).join("");
+  el.innerHTML = `<thead><tr><th>Insumo</th><th>Costo bruto</th><th>Merma</th><th>Costo neto</th></tr></thead><tbody>${rows}</tbody>`;
+  el.querySelectorAll(".insumo-bruto").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const ins = INSUMOS.find(i => i.id === inp.dataset.id);
+      ins.bruto = parseFloat(inp.value)||0;
+      saveInsumos(INSUMOS);
+      renderTablaInsumos();
+      renderTablaPrecios();
+    });
+  });
+  el.querySelectorAll(".insumo-merma").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const ins = INSUMOS.find(i => i.id === inp.dataset.id);
+      ins.merma = (parseFloat(inp.value)||0)/100;
+      saveInsumos(INSUMOS);
+      renderTablaInsumos();
+      renderTablaPrecios();
+    });
+  });
+}
+
+function renderTablaPrecios(){
+  const el = document.getElementById("tablaPrecios");
+  if (!el) return;
+  const rows = PRODUCTOS.filter(p => PRODUCTOS_META[p.id]).map(p => {
+    const ctotal = costoTotalUnitario(p.id);
+    const margen = ctotal > 0 ? ((p.precio - ctotal)/ctotal*100) : 0;
+    const color = margen < 15 ? "#C0392B" : margen < 30 ? "#B8860B" : "#2E7D46";
+    return `<tr data-id="${p.id}">
+      <td>${p.nombre}</td>
+      <td>${fmtMoney(ctotal)}</td>
+      <td><input type="number" class="precio-input" data-id="${p.id}" value="${p.precio}" min="0" step="50" style="min-height:38px; padding:6px 10px; width:110px;"></td>
+      <td style="font-weight:700; color:${color};">${margen.toFixed(1)}%</td>
+      <td><button class="btn-text detalle-btn" data-id="${p.id}">Receta y margen 🔍</button></td>
+    </tr>`;
+  }).join("");
+  el.innerHTML = `<thead><tr><th>Producto</th><th>Costo total/kg</th><th>Precio actual</th><th>Margen actual</th><th></th></tr></thead><tbody>${rows}</tbody>`;
+  el.querySelectorAll(".precio-input").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const p = PRODUCTOS.find(x => x.id === inp.dataset.id);
+      const val = parseFloat(inp.value);
+      if (!isNaN(val) && val >= 0){ p.precio = val; savePrecioProducto(p.id, p.precio); }
+      renderTablaPrecios();
+    });
+  });
+  el.querySelectorAll(".detalle-btn").forEach(btn => {
+    btn.addEventListener("click", () => openProductoModal(btn.dataset.id));
+  });
+}
+
+function openProductoModal(id){
+  const p = PRODUCTOS.find(x => x.id === id);
+  const receta = RECETAS[id] || (RECETAS[id] = {});
+  const box = document.getElementById("modalBox");
+
+  function render(){
+    const cvar = costoVariableUnitario(id);
+    const cfijo = costoFijoUnitario(id);
+    const ctotal = cvar + cfijo;
+    const margenActual = ctotal > 0 ? ((p.precio - ctotal)/ctotal*100) : 0;
+
+    const filasReceta = Object.entries(receta).map(([insId,qty]) => {
+      const ins = INSUMOS.find(i=>i.id===insId);
+      if (!ins) return "";
+      return `<tr>
+        <td>${ins.nombre}</td>
+        <td><input type="number" class="receta-qty" data-ins="${insId}" value="${qty}" min="0" step="0.01" style="min-height:36px; padding:5px 8px; width:80px;"></td>
+        <td>${fmtMoney(costoNetoInsumo(insId))}/kg</td>
+      </tr>`;
+    }).join("");
+
+    box.innerHTML = `
+      <h3 style="font-size:16px; margin-bottom:4px;">${p.nombre}</h3>
+      <p class="note" style="margin-bottom:12px;">Cantidad de cada insumo por kg de producto terminado.</p>
+      <div class="table-scroll"><table><thead><tr><th>Insumo</th><th>Cant./kg</th><th>Costo neto</th></tr></thead><tbody>${filasReceta}</tbody></table></div>
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line); font-size:13.5px; line-height:1.8;">
+        <div>Costo variable/kg: <strong>${fmtMoney(cvar)}</strong></div>
+        <div>Costo fijo/kg (prorrateado): <strong>${fmtMoney(cfijo)}</strong></div>
+        <div>Costo total/kg: <strong>${fmtMoney(ctotal)}</strong></div>
+        <div>Precio actual: <strong>${fmtMoney(p.precio)}</strong> — margen actual: <strong>${margenActual.toFixed(1)}%</strong></div>
+      </div>
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+        <label for="inpMargenDeseado">Simular con este margen sobre el costo</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="number" id="inpMargenDeseado" value="${Math.max(0,Math.round(margenActual))}" min="0" step="1" style="width:90px;">
+          <span>%</span>
+        </div>
+        <p class="note" id="simResultado" style="margin-top:10px; margin-bottom:10px;"></p>
+        <button class="btn" id="btnUsarPrecio" style="display:none;"></button>
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+        <button class="btn-text" id="mCerrar">Cerrar</button>
+      </div>
+    `;
+
+    box.querySelectorAll(".receta-qty").forEach(inp => {
+      inp.addEventListener("input", () => {
+        receta[inp.dataset.ins] = parseFloat(inp.value)||0;
+        RECETAS[id] = receta;
+        saveRecetas(RECETAS);
+        render();
+        renderTablaPrecios();
+      });
+    });
+    document.getElementById("mCerrar").addEventListener("click", closeModal);
+
+    const inpMargen = document.getElementById("inpMargenDeseado");
+    const simResultado = document.getElementById("simResultado");
+    const btnUsar = document.getElementById("btnUsarPrecio");
+    function actualizarSim(){
+      const deseado = parseFloat(inpMargen.value);
+      if (isNaN(deseado)){ simResultado.textContent=""; btnUsar.style.display="none"; return; }
+      const sugerido = Math.round(ctotal*(1+deseado/100));
+      const diff = sugerido - p.precio;
+      simResultado.innerHTML = `Precio sugerido: <strong>${fmtMoney(sugerido)}</strong> &nbsp;(${diff>=0?"+":""}${fmtMoney(diff)} vs. el actual)`;
+      btnUsar.style.display = "inline-block";
+      btnUsar.textContent = "Usar " + fmtMoney(sugerido) + " como nuevo precio";
+      btnUsar.onclick = () => {
+        p.precio = sugerido;
+        savePrecioProducto(p.id, p.precio);
+        render();
+        renderTablaPrecios();
+      };
+    }
+    inpMargen.addEventListener("input", actualizarSim);
+    actualizarSim();
+  }
+  render();
+  document.getElementById("modalOverlay").style.display = "flex";
+}
+
+// ---------------- STOCK Y PRODUCCIÓN ----------------
+function renderStock(main){
+  const opcionesProd = PRODUCTOS.map(p => `<option value="${p.id}">${p.nombre}</option>`).join("");
+  main.innerHTML = `
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">📦 Cargar producción</h3>
+      <p class="note">Cada lote queda identificado por su fecha de elaboración. Al registrar una venta, se descuenta primero del lote más viejo con stock (FIFO) — así nunca vendés algo recién hecho dejando algo más viejo guardado.</p>
+      <div class="form-grid">
+        <div>
+          <label for="inpFechaElab">Fecha de elaboración</label>
+          <input type="date" id="inpFechaElab" value="${todayStr()}">
+        </div>
+        <div>
+          <label for="inpProdStock">Producto</label>
+          <select id="inpProdStock">${opcionesProd}</select>
+        </div>
+        <div>
+          <label for="inpKilosStock">Kilos producidos</label>
+          <input type="number" id="inpKilosStock" min="0.1" step="0.1" placeholder="Ej: 20">
+        </div>
+      </div>
+      <button class="btn" id="btnCargarStock">Agregar al stock 📦</button>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">Stock actual</h3>
+      <p class="note">Ordenado del lote más viejo al más nuevo — el de arriba es el próximo que se descuenta al vender.</p>
+      <div id="stockPorProducto"></div>
+    </div>
+  `;
+
+  document.getElementById("btnCargarStock").addEventListener("click", () => {
+    const fecha = document.getElementById("inpFechaElab").value || todayStr();
+    const prod = PRODUCTOS.find(p => p.id === document.getElementById("inpProdStock").value);
+    const inpKg = document.getElementById("inpKilosStock");
+    const kg = parseFloat(inpKg.value);
+    if (!kg || kg <= 0){ inpKg.focus(); return; }
+    STOCK.push({ id:genLoteId(), producto:prod.nombre, fechaElaboracion:fecha, kilosIniciales:kg, kilosRestantes:kg });
+    saveStock(STOCK);
+    inpKg.value = "";
+    renderStockTabla();
+  });
+
+  renderStockTabla();
+}
+
+function renderStockTabla(){
+  const el = document.getElementById("stockPorProducto");
+  if (!el) return;
+  if (STOCK.length === 0){
+    el.innerHTML = '<div class="empty">🐾 Todavía no cargaste ningún lote de producción.</div>';
+    return;
+  }
+  const nombres = [...new Set(STOCK.map(l => l.producto))];
+
+  const bloques = nombres.map(nombre => {
+    const lotes = STOCK.filter(l => l.producto === nombre)
+      .sort((a,b) => a.fechaElaboracion < b.fechaElaboracion ? -1 : a.fechaElaboracion > b.fechaElaboracion ? 1 : 0);
+    const total = lotes.reduce((a,l) => a + l.kilosRestantes, 0);
+    let yaMarcoProximo = false;
+    const filas = lotes.map(l => {
+      const esProximo = !yaMarcoProximo && l.kilosRestantes > 0;
+      if (esProximo) yaMarcoProximo = true;
+      return `<tr data-lote="${l.id}">
+        <td>${l.fechaElaboracion}${esProximo ? ' <span class="badge">próximo</span>' : ""}</td>
+        <td><input type="number" class="lote-kg" data-id="${l.id}" value="${l.kilosRestantes}" min="0" step="0.1" style="min-height:36px; padding:5px 8px; width:90px;"></td>
+        <td style="color:var(--slate); font-size:12.5px;">de ${fmtKg(l.kilosIniciales)} iniciales</td>
+        <td><button class="btn-text btn-danger borrar-lote" data-id="${l.id}">Eliminar</button></td>
+      </tr>`;
+    }).join("");
+    return `
+      <div style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="font-family:'Quicksand',sans-serif; color:var(--pink-dark);">${nombre}</strong>
+          <span style="font-weight:700;">${fmtKg(total)} disponibles</span>
+        </div>
+        <div class="table-scroll"><table><thead><tr><th>Fecha de elaboración</th><th>Kilos restantes</th><th></th><th></th></tr></thead><tbody>${filas}</tbody></table></div>
+      </div>`;
+  }).join("");
+  el.innerHTML = bloques;
+
+  el.querySelectorAll(".lote-kg").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const lote = STOCK.find(l => l.id === inp.dataset.id);
+      if (lote) lote.kilosRestantes = Math.max(0, parseFloat(inp.value)||0);
+      saveStock(STOCK);
+      renderStockTabla();
+    });
+  });
+  el.querySelectorAll(".borrar-lote").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!confirm("¿Eliminar este lote del stock? No se puede deshacer.")) return;
+      STOCK = STOCK.filter(l => l.id !== btn.dataset.id);
+      saveStock(STOCK);
+      renderStockTabla();
+    });
+  });
+}
+
+// ---------------- CLIENTES ----------------
+let filtroClientes = "";
+
+function listaClientes(){
+  const ventas = loadVentas().filter(v => v.cliente && v.cliente.trim());
+  const map = {};
+  ventas.forEach(v => {
+    const key = v.cliente.trim().toLowerCase();
+    if (!map[key]) map[key] = { nombre:v.cliente.trim(), compras:0, kilos:0, total:0, ultimaFecha:v.fecha, productos:{} };
+    const c = map[key];
+    c.compras += 1;
+    c.kilos += v.kilos;
+    c.total += v.total;
+    if (v.fecha > c.ultimaFecha) c.ultimaFecha = v.fecha;
+    c.productos[v.producto] = (c.productos[v.producto]||0) + v.kilos;
+  });
+  return Object.entries(map).map(([key,c]) => {
+    let favorito = null, max = 0;
+    Object.entries(c.productos).forEach(([p,kg]) => { if (kg > max){ max = kg; favorito = p; } });
+    return { key, nombre:c.nombre, compras:c.compras, kilos:c.kilos, total:c.total, ultimaFecha:c.ultimaFecha, favorito };
+  }).sort((a,b) => b.kilos - a.kilos);
+}
+
+function renderClientes(main){
+  main.innerHTML = `
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">🐶 Clientes</h3>
+      <p class="note">Se calculan solos a partir de las ventas registradas con nombre de cliente — puntos = kilos acumulados. Hacé click en uno para ver su historial completo y guardarle un teléfono o una nota.</p>
+      <input type="text" id="inpBuscarCliente" placeholder="Buscar cliente...">
+      <div id="tablaClientes" style="margin-top:14px;"></div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay" style="display:none;">
+      <div class="modal-box" id="modalBox" style="max-width:520px;"></div>
+    </div>
+  `;
+  document.getElementById("inpBuscarCliente").addEventListener("input", (e) => {
+    filtroClientes = e.target.value;
+    renderTablaClientes();
+  });
+  renderTablaClientes();
+}
+
+function renderTablaClientes(){
+  const el = document.getElementById("tablaClientes");
+  if (!el) return;
+  let clientes = listaClientes();
+  const texto = filtroClientes.trim().toLowerCase();
+  if (texto) clientes = clientes.filter(c => c.nombre.toLowerCase().includes(texto));
+  if (clientes.length === 0){
+    el.innerHTML = '<div class="empty">🐾 ' + (texto ? "No encontré clientes con ese nombre." : "Todavía no hay ventas con cliente identificado.") + '</div>';
+    return;
+  }
+  const rows = clientes.map(c => `
+    <tr data-key="${c.key}" class="fila-cliente">
+      <td>${c.nombre}</td>
+      <td>${c.compras}</td>
+      <td>${fmtKg(c.kilos)} 🏅</td>
+      <td>${c.ultimaFecha}</td>
+      <td>${c.favorito || "—"}</td>
+      <td>${hideRevenue ? "••••••" : fmtMoney(c.total)}</td>
+    </tr>`).join("");
+  el.innerHTML = `<div class="table-scroll"><table style="min-width:620px;"><thead><tr><th>Cliente</th><th>Compras</th><th>Puntos</th><th>Última compra</th><th>Favorito</th><th>Gastado</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  el.querySelectorAll(".fila-cliente").forEach(tr => {
+    tr.addEventListener("click", () => openClienteModal(tr.dataset.key));
+  });
+}
+
+function openClienteModal(key){
+  const c = listaClientes().find(x => x.key === key);
+  if (!c) return;
+  const datos = loadClientes();
+  const extra = datos[key] || { telefono:"", notas:"" };
+  const historial = loadVentas()
+    .filter(v => (v.cliente||"").trim().toLowerCase() === key)
+    .sort((a,b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0);
+  const box = document.getElementById("modalBox");
+  const filas = historial.map(v => `<tr><td>${v.fecha}</td><td>${v.producto}</td><td>${fmtKg(v.kilos)}</td><td>${fmtMoney(v.total)}</td></tr>`).join("");
+  box.innerHTML = `
+    <h3 style="font-size:16px; margin-bottom:4px;">${c.nombre}</h3>
+    <p class="note" style="margin-bottom:12px;">${c.compras} compras · ${fmtKg(c.kilos)} acumulados · favorito: ${c.favorito || "—"}</p>
+    <div class="form-grid" style="margin-bottom:14px;">
+      <div><label for="cTelefono">Teléfono</label><input type="text" id="cTelefono" value="${extra.telefono||""}" placeholder="Opcional"></div>
+      <div><label for="cNotas">Notas</label><input type="text" id="cNotas" value="${extra.notas||""}" placeholder="Ej: alergia al pollo"></div>
+    </div>
+    <h4 style="font-family:'Quicksand',sans-serif; font-size:14px; color:var(--pink-dark); margin-bottom:8px;">Historial de compras</h4>
+    <div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Producto</th><th>Kilos</th><th>Total</th></tr></thead><tbody>${filas}</tbody></table></div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+      <button class="btn-text" id="mCerrarCliente">Cerrar</button>
+      <button class="btn" id="mGuardarCliente">Guardar</button>
+    </div>
+  `;
+  document.getElementById("modalOverlay").style.display = "flex";
+  document.getElementById("mCerrarCliente").addEventListener("click", closeModal);
+  document.getElementById("mGuardarCliente").addEventListener("click", () => {
+    const d = loadClientes();
+    d[key] = { telefono: document.getElementById("cTelefono").value.trim(), notas: document.getElementById("cNotas").value.trim() };
+    saveClientes(d);
+    closeModal();
+  });
+}
+
+// ---------------- PRONÓSTICO ----------------
+const DIAS_SEMANA = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+
+function diasConDatos(){
+  const ventas = loadVentas();
+  if (ventas.length === 0) return { desde:null, hasta:null, dias:0 };
+  const fechas = ventas.map(v => v.fecha).sort();
+  const desde = fechas[0], hasta = fechas[fechas.length-1];
+  const dias = Math.max(1, Math.round((new Date(hasta+"T00:00:00") - new Date(desde+"T00:00:00"))/86400000) + 1);
+  return { desde, hasta, dias };
+}
+
+// Promedio de kg/día vendidos de un producto, en los últimos "ventanaDias" días con datos
+// (contando los días sin venta de ese producto como cero, para no inflar el promedio).
+function promedioDiarioProducto(nombreProducto, ventanaDias){
+  const todas = loadVentas();
+  if (todas.length === 0) return 0;
+  const fechas = todas.map(v => v.fecha).sort();
+  let desde = fechas[0];
+  const hasta = fechas[fechas.length-1];
+  if (ventanaDias){
+    const limite = new Date(hasta+"T00:00:00");
+    limite.setDate(limite.getDate() - ventanaDias + 1);
+    const limiteStr = limite.toISOString().slice(0,10);
+    if (limiteStr > desde) desde = limiteStr;
+  }
+  const totalDias = Math.max(1, Math.round((new Date(hasta+"T00:00:00") - new Date(desde+"T00:00:00"))/86400000) + 1);
+  const kgEnVentana = todas.filter(v => v.producto === nombreProducto && v.fecha >= desde && v.fecha <= hasta).reduce((a,v) => a+v.kilos, 0);
+  return kgEnVentana / totalDias;
+}
+
+// Factor del día de la semana (1 = vende como un día promedio, 1.2 = vende 20% más ese día).
+// Necesita al menos una semana completa de datos para no inventar un patrón con poca info.
+function factorDiaSemana(nombreProducto, diaSemana){
+  const todas = loadVentas();
+  const fechasTodas = [...new Set(todas.map(v => v.fecha))].sort();
+  if (fechasTodas.length < 7) return 1;
+  const porFecha = {};
+  todas.filter(v => v.producto === nombreProducto).forEach(v => { porFecha[v.fecha] = (porFecha[v.fecha]||0) + v.kilos; });
+  const sumaPorDia = [0,0,0,0,0,0,0], countPorDia = [0,0,0,0,0,0,0];
+  fechasTodas.forEach(f => {
+    const d = new Date(f+"T00:00:00").getDay();
+    sumaPorDia[d] += porFecha[f]||0;
+    countPorDia[d] += 1;
+  });
+  const promedios = sumaPorDia.map((s,i) => countPorDia[i] ? s/countPorDia[i] : 0);
+  const promedioGeneral = promedios.reduce((a,b)=>a+b,0)/7;
+  if (promedioGeneral <= 0) return 1;
+  return promedios[diaSemana] / promedioGeneral;
+}
+
+function renderPronostico(main){
+  const { desde, hasta, dias } = diasConDatos();
+  const manana = (() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })();
+  main.innerHTML = `
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:6px;">📈 Pronóstico de ventas</h3>
+      <p class="note">${
+        dias < 14
+          ? "Todavía hay pocos días de ventas registradas" + (dias>0 ? " (" + dias + ")" : "") + ", así que esto es más un piso que una proyección precisa. Se va a afinar solo a medida que registrés más ventas."
+          : "Calculado con " + dias + " días de historial (" + desde + " a " + hasta + "), promediando por producto y por día de la semana."
+      }</p>
+      <div class="form-grid" style="max-width:260px;">
+        <div>
+          <label for="inpFechaPron">¿Para qué fecha?</label>
+          <input type="date" id="inpFechaPron" value="${manana}">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <p class="note">La "sugerencia a producir" es el pronóstico para ese día menos el stock que ya tenés cargado — si el stock alcanza, no hace falta producir más.</p>
+      <div class="table-scroll"><table id="tablaPronostico" style="min-width:680px;"></table></div>
+    </div>
+  `;
+  document.getElementById("inpFechaPron").addEventListener("change", renderTablaPronostico);
+  renderTablaPronostico();
+}
+
+function renderTablaPronostico(){
+  const el = document.getElementById("tablaPronostico");
+  if (!el) return;
+  const fecha = document.getElementById("inpFechaPron").value || todayStr();
+  const diaSemana = new Date(fecha+"T00:00:00").getDay();
+  const rows = PRODUCTOS.map(p => {
+    const promedio = promedioDiarioProducto(p.nombre, 60);
+    const factor = factorDiaSemana(p.nombre, diaSemana);
+    const pronostico = promedio * factor;
+    const disp = stockDisponible(p.nombre);
+    const sugerido = Math.max(0, pronostico - disp);
+    return `<tr>
+      <td>${p.nombre}</td>
+      <td>${fmtKg(promedio)}/día</td>
+      <td>${pronostico > 0 ? fmtKg(pronostico) : "—"}</td>
+      <td>${fmtKg(disp)}</td>
+      <td style="font-weight:700; color:${sugerido > 0 ? 'var(--pink-dark)' : '#2E7D46'};">${sugerido > 0 ? fmtKg(sugerido) : "Alcanza con el stock"}</td>
+    </tr>`;
+  }).join("");
+  el.innerHTML = `<thead><tr><th>Producto</th><th>Promedio diario</th><th>Pronóstico — ${DIAS_SEMANA[diaSemana]}</th><th>Stock disponible</th><th>Sugerencia a producir</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+renderNav();
+renderMain();
+iniciarSync();
+</script>
+</body>
+</html>
